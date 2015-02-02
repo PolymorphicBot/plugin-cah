@@ -19,7 +19,7 @@ Future<Deck> getDeck(String deckCode) {
 
     if (storage.getMap("q").containsKey(deckCode) || storage.getMap("r").containsKey(deckCode)) {
       var q = storage.getMap("q")[deckCode];
-      var r = storage.getMap("q")[deckCode];
+      var r = storage.getMap("r")[deckCode];
 
       completer.complete(new Deck(name, q, r));
       return;
@@ -40,7 +40,7 @@ Future<Deck> getDeck(String deckCode) {
       storage.save();
       completer.complete(new Deck(name, q, r));
     });
-  });
+  }).catchError((error) => completer.completeError(error));
 
   return completer.future;
 }
