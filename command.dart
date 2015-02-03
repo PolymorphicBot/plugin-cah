@@ -32,45 +32,47 @@ class CAHCommandEvent {
 
   CAHCommandEvent(this.channel, this.user, this.args, this.state);
 
-  factory CAHCommandEvent.fromCommandEvent(CommandEvent event, int state) =>
-    new CAHCommandEvent(new CAHChannel(event.network, event.channel), event.user, event.args.sublist(1), state);
+  factory CAHCommandEvent.fromCommandEvent(CommandEvent event, int state) {
+    return new CAHCommandEvent(new CAHChannel(event.network, event.channel), event.user, event.args.sublist(1), state);
+  }
 
-  reply(String msg) => bot.sendMessage(this.channel.network, this.channel.name, "[${Color.BLUE}CAH${Color.RESET}] ${user}:" + msg);
+  reply(String msg) => bot.sendMessage(this.channel.network, this.channel.name, "[${Color.BLUE}CAH${Color.RESET}] ${user}:${msg}");
 }
 
-@Command("cah")
+@Command("cah", description: "Chat against Humanity", usage: "<command> [args]")
 void handleMessage(CommandEvent event) {
-  if(event.args.length == 0)
+  if (event.hasNoArguments) {
+    event.usage();
     return;
+  }
+
   findFunctionAnnotations(CAHCommand).forEach((anno) {
-    if(anno.metadata.name != event.args[0])
-      return;
+    if (anno.metadata.name != event.args[0]) return;
 
     var states = anno.metadata.states;
     int state = CAHCommandState.NOGAME;
 
     var channel = new CAHChannel(event.network, event.channel);
-    if(games.containsKey(channel))
-      state = games[channel].started ? CAHCommandState.GAME : CAHCommandState.PREGAME;
+    if (games.containsKey(channel)) state = games[channel].started ? CAHCommandState.GAME : CAHCommandState.PREGAME;
 
     var cahEvent = new CAHCommandEvent.fromCommandEvent(event, state);
 
-    if(states.indexOf(state) < 0) {
-      if(state == CAHCommandState.NOGAME) {
+    if (states.indexOf(state) < 0) {
+      if (state == CAHCommandState.NOGAME) {
         bot.getPrefix(event.network, event.channel).then((prefix) {
           prefix = prefix + "cah";
           cahEvent.reply("A game hasn't been set up yet! Type '${prefix} play' to set up a game.");
         });
       }
 
-      if(state == CAHCommandState.PREGAME) {
+      if (state == CAHCommandState.PREGAME) {
         bot.getPrefix(event.network, event.channel).then((prefix) {
-          prefix = prefix + "cah";
+          prefix = "${prefix}cah";
           cahEvent.reply("The game is still being set up! Type '${prefix} play' to play.");
         });
       }
 
-      if(state == CAHCommandState.GAME) {
+      if (state == CAHCommandState.GAME) {
         cahEvent.reply("Game has already started!");
       }
       return;

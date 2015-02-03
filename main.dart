@@ -1,12 +1,11 @@
 library cahbot;
 
-import 'dart:math';
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
-import 'package:http/http.dart' as http;
-import 'package:polymorphic_bot/api.dart';
-import "package:irc/client.dart" show Color;
+import 'package:polymorphic_bot/plugin.dart';
+export 'package:polymorphic_bot/plugin.dart';
 
 part 'command.dart';
 part 'cardcast.dart';
@@ -22,19 +21,19 @@ Plugin plugin;
 
 Storage storage;
 
-void main(List<String> args, port) {
-  polymorphic(args, port);
-}
-
 @Start()
 void start() {
   storage = plugin.getStorage("storage", group: "CAH", saveOnChange: false);
   storage.load();
 
-  if(!storage.entries.containsKey("q"))
-    storage.setMap("q", new Map());
-  if(!storage.entries.containsKey("r"))
-    storage.setMap("r", new Map());
+  if (!storage.has("q")) {
+    storage.setMap("q", {});
+  }
+  
+  if (!storage.has("r")) {
+    storage.setMap("r", {});
+  }
+  
   storage.save();
 
   print("[CAH] Loading Plugin");
@@ -42,7 +41,7 @@ void start() {
 
 @CAHCommand("play", const [CAHCommandState.NOGAME, CAHCommandState.PREGAME])
 void commandPlay(event) {
-  if(event.state == CAHCommandState.PREGAME) {
+  if (event.state == CAHCommandState.PREGAME) {
     var game = games[event.channel];
 
     game.start();
@@ -68,7 +67,7 @@ void commandPlay(event) {
 void commandJoin(event) {
   var game = games[event.channel];
 
-  if(game.players.any((player) => player.name == event.user)) {
+  if (game.players.any((player) => player.name == event.user)) {
     event.reply("You are already in the player list!");
     return;
   }
